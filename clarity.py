@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 # Define the input and output paths for the notes
 INPUT_PATH = os.path.expanduser("~/Documents/private/Notes/work-daily")
-OUTPUT_PATH = os.path.expanduser("~/Documents/private/Notes/clarity")
+OUTPUT_PATH = os.path.expanduser("~/Documents/private/Notes/clarity/")
 
 # Function to extract entries from markdown files in a specified folder for a given month and year
 def get_entries_from_files(folder, month_num, year):
