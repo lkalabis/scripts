@@ -117,15 +117,15 @@ else:
 file_path = os.path.join(SECOND_BRAIN, f"{today}.md")
 if not os.path.isfile(file_path):
     print("File does not exist, creating new daily note.")
-    create_note_for_date(today, yesterday, tomorrow, " ".join(args.log_entry) if args.log_entry else None)
 
-# Append log entry if provided and not using range
-if args.log_entry and not args.range:
-    log_entry = " ".join(args.log_entry)
-    with open(file_path, 'a') as file:
-        file.write(f"\n- {log_entry}\n")
+else:
+    print("File does exist.")
+    # Append log entry if provided and not using range
+    if args.log_entry and not args.range:
+        log_entry = " ".join(args.log_entry)
+        with open(file_path, 'a') as file:
+            file.write(f"\n- {log_entry}\n")
 
 # Open the note with nvim if no log entry or only the '-t' or '-d' option is provided
 if not args.log_entry or args.tomorrow or args.date:
-    subprocess.run(['nvim', '+ normal Gzzo', file_path])
-
+   subprocess.run(['nvim', '+ normal Gzzo', file_path])
