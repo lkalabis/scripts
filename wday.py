@@ -119,7 +119,6 @@ if not os.path.isfile(file_path):
     print("File does not exist, creating new daily note.")
 
 else:
-    print("File does exist.")
     # Append log entry if provided and not using range
     if args.log_entry and not args.range:
         log_entry = " ".join(args.log_entry)
