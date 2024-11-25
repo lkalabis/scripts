@@ -115,7 +115,6 @@ else:
 
 # Single note creation or log entry logic
 file_path = os.path.join(SECOND_BRAIN, f"{today}.md")
-print(file_path)
 if not os.path.isfile(file_path):
     print("File does not exist, creating new daily note.")
     create_note_for_date(today, yesterday, tomorrow)
