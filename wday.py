@@ -13,11 +13,11 @@ parser = argparse.ArgumentParser(
     description="A script to manage daily work notes.",
     epilog="""
 Examples:
-  script.py                          Opens today's note or creates it if it doesn't exist.
-  script.py -t                       Opens tomorrow's note or creates it if it doesn't exist.
-  script.py -d 15.11.2024            Opens or creates the note for a specific date (e.g., 15th Nov 2024).
-  script.py -r 13.11.2024-20.11.2024 Creates notes for each weekday in the specified date range.
-  script.py "some log entry"         Adds a log entry to today's note.
+  wday.py                          Opens today's note or creates it if it doesn't exist.
+  wday.py -t                       Opens tomorrow's note or creates it if it doesn't exist.
+  wday.py -d 15.11.2024            Opens or creates the note for a specific date (e.g., 15th Nov 2024).
+  wday.py -r 13.11.2024-20.11.2024 Creates notes for each weekday in the specified date range.
+  wday.py "some log entry"         Adds a log entry to today's note.
 """,
     formatter_class=argparse.RawTextHelpFormatter
 )
@@ -115,9 +115,10 @@ else:
 
 # Single note creation or log entry logic
 file_path = os.path.join(SECOND_BRAIN, f"{today}.md")
+print(file_path)
 if not os.path.isfile(file_path):
     print("File does not exist, creating new daily note.")
-
+    create_note_for_date(today, yesterday, tomorrow)
 else:
     # Append log entry if provided and not using range
     if args.log_entry and not args.range:
