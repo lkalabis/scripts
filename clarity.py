@@ -31,10 +31,19 @@ def get_entries_from_files(folder, month_num, year):
                             entries[day].append(line.strip().replace("- C:", "").strip())  # Add the entry
     return entries
 
+
 # Function to generate a markdown report for a given month
-def generate_markdown(month_name_input):
+def generate_markdown(month_name_input, year_input=None):
     # Get the current year
     year = datetime.now().year
+
+    if year_input is not None:
+        # Check if the provided year is valid
+        try:
+            year = int(year_input)
+        except ValueError:
+            print(f"Invalid year provided: {year_input}")
+            return
 
     # Map month names to their corresponding numbers (1-12)
     month_number = {month: index for index, month in enumerate(calendar.month_name) if month}
@@ -84,7 +93,8 @@ def generate_markdown(month_name_input):
         for i in range((week_end - week_start).days + 1):
             day = week_start + timedelta(days=i)  # Calculate the current day in the loop
             if day.weekday() < 5:  # Process only weekdays (Monday to Friday)
-                day_entry = f"[{day_labels[day.weekday()}]"  # Get the corresponding weekday label
+                day_entry = f"[{day_labels[day.weekday()]}]"  # Get the corresponding weekday label
+
                 if day.day in entries:
                     day_entry += " " + ", ".join(entries[day.day])  # Add entries for that day if available
                 output += day_entry + "\n"
@@ -106,15 +116,19 @@ def generate_markdown(month_name_input):
     # Print a confirmation message
     print(f"Markdown file '{output_file}' has been generated.")
 
+
 # Main entry point for the script
 if __name__ == "__main__":
-    # Check if the correct number of arguments is provided (should be one argument: month name)
-    if len(sys.argv) != 2:
-        print("Usage: python clarity <month_name>")
+    # Check if the number of arguments is valid (2 or 3 arguments: month name, optional year)
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print("Usage: python clarity <month_name> [year]")
         sys.exit(1)
 
     # Retrieve the month name input from the command-line arguments
     month_name_input = sys.argv[1]
 
-    # Generate the markdown report for the given month
-    generate_markdown(month_name_input)
+    # Retrieve the optional year input from the command-line arguments
+    year_input = sys.argv[2] if len(sys.argv) == 3 else None
+
+    # Generate the markdown report for the given month and optional year
+    generate_markdown(month_name_input, year_input)
