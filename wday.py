@@ -57,7 +57,7 @@ tags:
 
 ## Todos
 
-- [ ] 
+- [ ]
 
 ## Log
 """)
@@ -67,6 +67,7 @@ tags:
 
         print(f"Created note for {date_str} with log entry: {log_entry if log_entry else 'No log entry provided.'}")
     return file_path
+
 
 # Determine dates based on arguments
 if args.range:
@@ -78,7 +79,6 @@ if args.range:
     except ValueError:
         print("Invalid date range format. Please use dd.mm.yyyy-dd.mm.yyyy format.")
         sys.exit(1)
-    
     # Prepare log entry if available
     log_entry = " ".join(args.log_entry) if args.log_entry else None
 
