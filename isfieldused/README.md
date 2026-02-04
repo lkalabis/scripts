@@ -20,6 +20,11 @@ A small utility to check whether specific fields are used within a project direc
 python3 isfieldused.py --fields fields.txt --start /path/to/project --json-out results.json
 ```
 
+With parallel workers:
+```bash
+python3 isfieldused.py --fields fields.txt --start /path/to/project --workers 8
+```
+
 ## Inputs
 
 - `fields.txt`: one field name per line. Empty lines are ignored. Lines starting with `#` are treated as comments.
@@ -32,7 +37,8 @@ For each field, the script prints either the list of matching files or `(not fou
 
 Example:
 ```
-Pruefe Feld: MyField__c
+Scanned file 123/4567: /path/to/project/force-app/main/default/classes/Foo.cls
+Checking field: MyField__c
 MyField__c
   /path/to/project/force-app/main/default/classes/Foo.cls
   /path/to/project/force-app/main/default/triggers/Bar.trigger

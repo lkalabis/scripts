@@ -4,7 +4,8 @@ import json
 import os
 import re
 import sys
-from typing import Dict, List
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from typing import Dict, List, Tuple
 
 
 def load_fields(path: str) -> List[str]:
@@ -20,14 +21,12 @@ def load_fields(path: str) -> List[str]:
     return fields
 
 
-def compile_patterns(fields: List[str]) -> Dict[str, re.Pattern]:
-    patterns: Dict[str, re.Pattern] = {}
-    for field in fields:
-        # Exact token match: field not surrounded by word chars
-        escaped = re.escape(field)
-        pat = re.compile(rf"(?<![A-Za-z0-9_]){escaped}(?![A-Za-z0-9_])")
-        patterns[field] = pat
-    return patterns
+def compile_combined_pattern(fields: List[str]) -> str:
+    # Exact token match: field not surrounded by word chars
+    # Sort by length to avoid partial matches when fields share prefixes
+    escaped_fields = [re.escape(f) for f in sorted(fields, key=len, reverse=True)]
+    joined = "|".join(escaped_fields)
+    return rf"(?<![A-Za-z0-9_])(?:{joined})(?![A-Za-z0-9_])"
 
 
 def iter_files(start_path: str):
@@ -36,14 +35,25 @@ def iter_files(start_path: str):
             yield os.path.join(root, name)
 
 
-def scan_file(path: str, pattern: re.Pattern) -> bool:
+_PATTERN: re.Pattern | None = None
+
+
+def _init_worker(pattern_str: str) -> None:
+    global _PATTERN
+    _PATTERN = re.compile(pattern_str)
+
+
+def scan_file(path: str) -> Tuple[str, List[str]]:
     try:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             data = f.read()
     except (OSError, UnicodeError):
-        return False
+        return path, []
 
-    return pattern.search(data) is not None
+    if _PATTERN is None:
+        return path, []
+
+    return path, list({m.group(0) for m in _PATTERN.finditer(data)})
 
 
 def main() -> int:
@@ -65,6 +75,12 @@ def main() -> int:
         default="results.json",
         help="Where to write JSON results (default: results.json)",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=max(os.cpu_count() or 1, 1),
+        help="Number of parallel workers (default: CPU count)",
+    )
 
     args = parser.parse_args()
 
@@ -78,19 +94,31 @@ def main() -> int:
         print(f"Start path does not exist: {start_path}", file=sys.stderr)
         return 2
 
-    patterns = compile_patterns(fields)
+    pattern_str = compile_combined_pattern(fields)
     results: Dict[str, List[str]] = {f: [] for f in fields}
-    files = list(iter_files(start_path))
 
-    for field in fields:
-        print(f"Pruefe Feld: {field}")
-        pattern = patterns[field]
-        for path in files:
-            if scan_file(path, pattern):
-                results[field].append(path)
+    files = list(iter_files(start_path))
+    total = len(files)
+    if total == 0:
+        print("No files found under start path.")
+    else:
+        with ProcessPoolExecutor(
+            max_workers=args.workers,
+            initializer=_init_worker,
+            initargs=(pattern_str,),
+        ) as pool:
+            futures = {pool.submit(scan_file, path): path for path in files}
+            completed = 0
+            for future in as_completed(futures):
+                path, matched_fields = future.result()
+                completed += 1
+                print(f"Scanned file {completed}/{total}: {path}")
+                for field in matched_fields:
+                    results[field].append(path)
 
     # Human-readable output
     for field in fields:
+        print(f"Checking field: {field}")
         files = results[field]
         print(field)
         if files:
